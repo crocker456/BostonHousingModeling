@@ -1,0 +1,172 @@
+---
+title: "Boston Housing Exploration"
+output: html_notebook
+---
+
+
+I Start by importing the necessary libraries to run my analysis. I will be using the Boston Housing data set, a popular dataset for modeling.
+
+```{r}
+library(tidyverse)
+library(MASS)
+data(Boston)
+```
+
+I use the head command to get a quick look at the data.
+
+```{r}
+head(Boston)
+```
+
+I import the DataExplorer library. This package has a lot of useful functions for EDA plotting and discovery. I start by using the command plot_histogram() which plots histograms of each numeric column.  Many of the variables are not normally distributed, including the target variable medv.
+
+```{r}
+library(DataExplorer)
+plot_histogram(Boston)
+
+```
+
+
+The plot_correlation function from the DataExplorer package plots a correlation matrix from a dataframe.  I use it to look for highly correlation variables.  I am going use medv as my target variable. Their is a high negative correlation with lstat and a high positive correlation with rm
+
+```{r}
+library(plotly)
+map_dfr(Boston, scale) %>% plot_correlation()
+
+```
+
+```{r}
+plot_missing(Boston) 
+```
+
+
+```{r}
+library(caret)
+split = createDataPartition(Boston$medv, p = 0.7, list = F)
+train = Boston[split,]
+test = Boston[-split,]
+```
+
+```{r}
+ctrl <- trainControl(method = "repeatedcv", repeats = 10)
+plsFit <- train(
+  medv ~ .,
+  data = Boston ,
+  trControl = ctrl,
+  method = "pls",
+  ## Center and scale the predictors for the training
+  ## set and all future samples.
+  preProc = c("center", "scale"),
+  tuneLength = 10
+)
+```
+
+```{r}
+plot(varImp(plsFit))
+```
+
+```{r}
+plsFit
+```
+
+
+
+```{r}
+rfFit <- train(
+  medv ~ .,
+  data = Boston ,
+  trControl = ctrl,
+  method = "ranger",
+  importance = "impurity",
+  ## Center and scale the predictors for the training
+  ## set and all future samples.
+  preProc = c("center", "scale"),
+  tuneLength = 10
+)
+```
+
+```{r}
+rfFit
+```
+
+```{r}
+plot(varImp(rfFit))
+```
+
+```{r}
+regFit <- train(
+  medv ~ .,
+  data = Boston %>% drop_na(),
+  trControl = ctrl,
+  method = "glmnet",
+  family = "gaussian",
+  ## Center and scale the predictors for the training
+  ## set and all future samples.
+  preProc = c("center", "scale"),
+  tuneLength = 10
+)
+```
+
+```{r}
+regpred = predict(regFit, test)
+RMSE(regpred, test$medv)
+```
+```{r}
+par(mfrow = c(2,2))
+plot(varImp(regFit))
+```
+
+
+
+```{r}
+knnFit <- train(
+  medv ~ .,
+  data = Boston ,
+  trControl = ctrl,
+  method = "knn",
+  family = "gaussian",
+  ## Center and scale the predictors for the training
+  ## set and all future samples.
+  preProc = c("center", "scale"),
+  tuneLength = 10
+)
+```
+
+```{r}
+knnFit
+```
+
+
+```{r}
+treeFit <- train(
+  medv ~ .,
+  data = Boston ,
+  trControl = ctrl,
+  method = "rpart",
+  ## Center and scale the predictors for the training
+  ## set and all future samples.
+  preProc = c("center", "scale"),
+  tuneLength = 10
+)
+```
+
+```{r}
+treeFit
+```
+```{r}
+treeFit <- train(
+  medv ~ .,
+  data = Boston ,
+  trControl = ctrl,
+  method = "",
+  ## Center and scale the predictors for the training
+  ## set and all future samples.
+  preProc = c("center", "scale"),
+  tuneLength = 10
+)
+```
+
+```{r}
+
+```
+
