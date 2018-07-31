@@ -9,6 +9,7 @@ I Start by importing the necessary libraries to run my analysis. I will be using
 ```{r}
 library(tidyverse)
 library(MASS)
+library(dplyr)
 data(Boston)
 ```
 
@@ -109,7 +110,7 @@ regFit <- train(
 
 ```{r}
 regpred = predict(regFit, test)
-RMSE(regpred, test$medv)
+MAPE(regpred, test$medv)
 ```
 ```{r}
 par(mfrow = c(2,2))
@@ -158,7 +159,7 @@ treeFit <- train(
   medv ~ .,
   data = Boston ,
   trControl = ctrl,
-  method = "",
+  method = "glm",
   ## Center and scale the predictors for the training
   ## set and all future samples.
   preProc = c("center", "scale"),
